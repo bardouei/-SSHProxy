@@ -1,16 +1,30 @@
 
 🧭 SSHProxy – Simple macOS Menu Bar App for SSH SOCKS Proxy
 
-SSHProxy is a lightweight and beautiful macOS menu bar app that lets you create a secure SOCKS5 proxy tunnel via SSH with just one click. It's perfect for developers, power users, and privacy-conscious individuals who want to route their traffic through a secure remote server.
+SSHProxy is a lightweight macOS menu bar app that allows you to easily create a secure SOCKS5 proxy over SSH using sshpass. It's ideal for developers, remote workers, and privacy-minded users who want to tunnel traffic through a secure SSH connection with a single click.
 
 ✨ Features
-🖥️ macOS-native menu bar app – Built with Swift and SwiftUI
-🔐 Secure SSH connection – Uses your credentials to connect via SSH
-🧦 SOCKS5 Proxy – Opens a local proxy (like ssh -D)
-⚙️ Editable settings – Username, host, port, password, and local proxy config
-🔄 Persistent preferences – Uses AppStorage to save user inputs
-📋 Live logs – View real-time connection logs and status
-📡 Auto-detect port conflicts – Falls back to available ports if needed
-💥 No external dependencies like sshpass – Fully Swift-native
-🚀 Getting Started
-Just build and run the app. Set your SSH credentials and local proxy port, and toggle the proxy on/off from the beautiful UI.
+✅ SSH over SOCKS proxy (ssh -D) using sshpass
+🖥️ macOS-native UI built with Swift and SwiftUI
+🧦 SOCKS5 proxy tunnel auto-configures networksetup on macOS
+⚙️ User settings stored with @AppStorage (persistent between app launches)
+📋 Real-time output logs with auto-scroll and copyable logs
+🛠️ Auto-install sshpass via Homebrew if not already installed
+🚫 Port conflict detection – Kills previous processes using the same port
+🔐 Minimalistic toggle UI for proxy on/off, with a settings panel
+🚀 How It Works
+This app runs the equivalent of:
+
+sshpass -p [password] ssh -D 127.0.0.1:8443 -N [username]@[host] -p [port]
+It then activates the SOCKS5 proxy in your macOS network settings using networksetup.
+
+🛠 Requirements
+macOS 12+
+Homebrew installed (/opt/homebrew/bin/brew)
+sshpass (auto-installed if missing)
+🧪 Development
+Clone the repo and open in Xcode:
+
+git clone https://github.com/yourusername/SSHProxy.git
+cd SSHProxy
+open SSHProxy.xcodeproj
