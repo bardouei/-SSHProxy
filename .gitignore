@@ -1,0 +1,7 @@
+*.xcconfig
+*.mobileprovision
+*.xcuserstate
+*.xcworkspace
+*.xcodeproj/project.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+SSHProxy.xcodeproj/project.xcworkspace/xcuserdata/baner.xcuserdatad/UserInterfaceState.xcuserstate
