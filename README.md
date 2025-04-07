@@ -25,6 +25,6 @@ sshpass (auto-installed if missing)
 🧪 Development
 Clone the repo and open in Xcode:
 
-git clone https://github.com/yourusername/SSHProxy.git
+git clone https://github.com/bardouei/-SSHProxy.git
 cd SSHProxy
 open SSHProxy.xcodeproj
