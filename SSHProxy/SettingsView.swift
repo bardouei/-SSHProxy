@@ -4,7 +4,6 @@
 //
 //  Created by baner on 3/22/25.
 //
-
 import SwiftUI
 
 struct SettingsView: View {
@@ -12,41 +11,44 @@ struct SettingsView: View {
     @Environment(\.dismiss) var dismiss
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 16) {
             Text("SSH Settings")
-                .font(.headline)
-
-            TextField("Username", text: $ssh.username)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-
-            TextField("Server IP", text: $ssh.ip)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-
-            TextField("SSH Port", text: $ssh.port)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-
-            SecureField("Password", text: $ssh.password)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-
+                .font(.title3)
+                .fontWeight(.bold)
+            
+            Group {
+                TextField("Username", text: $ssh.username)
+                TextField("Server IP", text: $ssh.ip)
+                TextField("SSH Port", text: $ssh.port)
+                SecureField("Password", text: $ssh.password)
+            }
+            .textFieldStyle(RoundedBorderTextFieldStyle())
+            
             Divider()
-
+            
             Text("SOCKS Proxy")
-                .font(.headline)
-
-            TextField("Local Host", text: $ssh.localHost)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-
-            TextField("Local Port", text: $ssh.localPort)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-
+                .font(.title3)
+                .fontWeight(.bold)
+            
+            Group {
+                TextField("Local Host", text: $ssh.localHost)
+                TextField("Local Port", text: $ssh.localPort)
+            }
+            .textFieldStyle(RoundedBorderTextFieldStyle())
+            
             HStack {
                 Spacer()
                 Button("Done") {
                     dismiss()
                 }
+                .padding(.vertical, 8)
+                .padding(.horizontal, 16)
+                .background(Color.red.opacity(0.8))
+                .foregroundColor(.white)
+                .cornerRadius(8)
             }
         }
         .padding()
-        .frame(width: 300)
+        .frame(width: 320)
     }
 }

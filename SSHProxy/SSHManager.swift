@@ -22,18 +22,19 @@ class SSHManager: ObservableObject {
     var sshTask: Process?
     
     func startProxy() {
-        guard isSshpassInstalled() else {
-            outputLog += "❌ sshpass is not installed. Trying to install it via Homebrew...\n"
-            installSshpass()
-            return
-        }
-        
         guard !isRunning else {
             outputLog += "Proxy already running.\n"
             return
         }
-        if let pid = getPIDUsingPort(8443) {
-            killProcess(pid: pid)
+        
+        guard findSSHPassPath() != nil else {
+            outputLog += "❌ 'sshpass' is not installed or not found in common paths.\nPlease install it using Homebrew:\n    brew install sshpass\n"
+            return
+        }
+        
+        if isPortInUse(Int(localPort) ?? 8443) {
+            outputLog += "⚠️ Cannot start proxy: Port \(localPort) is already in use by another process.\nPlease stop it first or use a different port in Settings.\n"
+            return
         }
         
         if username.isEmpty || ip.isEmpty || port.isEmpty || password.isEmpty || localHost.isEmpty || localPort.isEmpty {
@@ -41,7 +42,6 @@ class SSHManager: ObservableObject {
             NotificationCenter.default.post(name: .showSettingsDueToEmptyFields, object: nil)
             return
         }
-        
         
         let task = Process()
         let outputPipe = Pipe()
@@ -61,7 +61,7 @@ class SSHManager: ObservableObject {
         ]
         
         self.sshTask = task
-        outputLog += "Starting SSH proxy with sshpass...\n"
+        outputLog += "Starting SSH proxy process...\n"
         
         task.terminationHandler = { _ in
             DispatchQueue.main.async {
@@ -95,10 +95,26 @@ class SSHManager: ObservableObject {
             }
             
         } catch {
-            outputLog += "Error starting sshpass: \(error.localizedDescription)\n"
+            outputLog += "Error starting : \(error.localizedDescription)\n"
             isRunning = false
             statusIconUpdater?(false)
         }
+    }
+    
+    func findSSHPassPath() -> String? {
+        let paths = [
+            "/opt/homebrew/bin/sshpass", // Apple Silicon
+            "/usr/local/bin/sshpass",    // Intel Macs
+            "/usr/bin/sshpass"           // Rare cases
+        ]
+        
+        let fileManager = FileManager.default
+        for path in paths {
+            if fileManager.isExecutableFile(atPath: path) {
+                return path
+            }
+        }
+        return nil
     }
     
     func stopProxy() {
@@ -108,28 +124,6 @@ class SSHManager: ObservableObject {
         outputLog += "Proxy stopped by user.\n"
         unsetSystemSocksProxy(interfaceName: "Wi-Fi")
         statusIconUpdater?(false)
-    }
-    
-    func installSshpass() {
-        let task = Process()
-        task.launchPath = "/opt/homebrew/bin/brew"
-        task.arguments = ["install", "sshpass"]
-        
-        let pipe = Pipe()
-        task.standardOutput = pipe
-        task.standardError = pipe
-        
-        do {
-            try task.run()
-            task.waitUntilExit()
-            
-            let data = pipe.fileHandleForReading.readDataToEndOfFile()
-            if let output = String(data: data, encoding: .utf8) {
-                outputLog += output
-            }
-        } catch {
-            outputLog += "Error installing sshpass: \(error.localizedDescription)\n"
-        }
     }
     
     func setSystemSocksProxy(interfaceName: String = "Wi-Fi", host: String = "127.0.0.1", port: String = "8443") {
@@ -169,56 +163,25 @@ class SSHManager: ObservableObject {
         }
     }
     
-    func getPIDUsingPort(_ port: Int) -> Int? {
+    func isPortInUse(_ port: Int) -> Bool {
         let task = Process()
-        task.launchPath = "/usr/sbin/lsof"
-        task.arguments = ["-i", ":\(port)", "-sTCP:LISTEN", "-t"]
+        task.launchPath = "/bin/bash"
+        task.arguments = ["-c", "netstat -an | grep LISTEN | grep :\(port)"]
         
         let pipe = Pipe()
         task.standardOutput = pipe
+        task.standardError = pipe
         
         do {
             try task.run()
             task.waitUntilExit()
             
             let data = pipe.fileHandleForReading.readDataToEndOfFile()
-            if let output = String(data: data, encoding: .utf8),
-               let pid = Int(output.trimmingCharacters(in: .whitespacesAndNewlines)) {
-                return pid
-            }
-        } catch {
-            print("Error finding PID: \(error)")
-        }
-        
-        return nil
-    }
-    
-    func killProcess(pid: Int) {
-        let task = Process()
-        task.launchPath = "/bin/kill"
-        task.arguments = ["-9", "\(pid)"]
-        
-        do {
-            try task.run()
-            task.waitUntilExit()
-            print("✅ Killed process with PID \(pid)")
-        } catch {
-            print("❌ Failed to kill process: \(error)")
-        }
-    }
-    
-    func isSshpassInstalled() -> Bool {
-        let fileManager = FileManager.default
-        let possiblePaths = [
-            "/opt/homebrew/bin/sshpass",
-            "/usr/local/bin/sshpass",
-            "/usr/bin/sshpass"
-        ]
-        
-        for path in possiblePaths {
-            if fileManager.fileExists(atPath: path) {
+            if let output = String(data: data, encoding: .utf8), !output.isEmpty {
                 return true
             }
+        } catch {
+            print("Error checking port status: \(error)")
         }
         
         return false
